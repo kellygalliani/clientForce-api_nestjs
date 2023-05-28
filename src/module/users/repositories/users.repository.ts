@@ -7,5 +7,7 @@ export abstract class UsersRepository {
   abstract findAll(): Promise<User[]> | User[];
   abstract findOne(id: string): Promise<User> | User;
   abstract update(id: string, data: UpdateUserDto): Promise<User> | User;
+  abstract updateEmail(emailId: string, email: string): Promise<User> | User;
+  abstract updatePhone(phoneId: string, phone: string): Promise<User> | User;
   abstract delete(id: string): Promise<void> | void;
 }

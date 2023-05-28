@@ -35,6 +35,16 @@ export class UsersController {
   update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
     return this.usersService.update(id, updateUserDto);
   }
+  @Patch(':email/:emailId')
+  updateEmail(@Param('emailId') emailId: string, @Body('email') email: string) {
+    return this.usersService.updateEmail(emailId, email);
+  }
+
+  @Patch(':phone/:phoneId')
+  updatePhone(@Param('phoneId') phoneId: string, @Body('phone') phone: string) {
+    return this.usersService.updatePhone(phoneId, phone);
+  }
+
   @HttpCode(204)
   @Delete(':id')
   remove(@Param('id') id: string) {

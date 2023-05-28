@@ -26,6 +26,14 @@ export class UsersService {
     return user;
   }
 
+  updateEmail(emailId: string, email: string) {
+    // lógica para modificar ou criar um novo e-mail
+  }
+
+  updatePhone(phoneId: string, phone: string) {
+    // lógica para modificar ou criar um novo e-mail
+  }
+
   async remove(id: string) {
     await this.usersRepository.delete(id);
     return;

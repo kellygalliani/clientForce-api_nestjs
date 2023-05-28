@@ -1,3 +1,4 @@
+import { HttpException, HttpStatus, NotFoundException } from '@nestjs/common';
 import { CreateUserDto } from '../../dto/create-user.dto';
 import { UpdateUserDto } from '../../dto/update-user.dto';
 import { User } from '../../entities/user.entity';
@@ -47,13 +48,17 @@ export class UsersInMemoryRepository implements UsersRepository {
     return plainToInstance(User, this.database);
   }
   findOne(id: string): User | Promise<User> {
+    const userIndex = this.database.findIndex((user) => user.id === id);
+    if (userIndex === -1) {
+      throw new NotFoundException('User not found');
+    }
     const user = this.database.find((user) => user.id === id);
     return plainToInstance(User, user);
   }
   update(id: string, data: UpdateUserDto): User | Promise<User> {
     const userIndex = this.database.findIndex((user) => user.id === id);
     if (userIndex === -1) {
-      throw new Error('User not found');
+      throw new NotFoundException('User not found');
     }
 
     if (data.email) {
@@ -64,7 +69,7 @@ export class UsersInMemoryRepository implements UsersRepository {
         emailIndex !== -1 &&
         this.userEmailsDatabase[emailIndex].user_id !== id
       ) {
-        throw new Error('Email already exists');
+        throw new HttpException('Email already exists', HttpStatus.CONFLICT);
       }
       if (
         emailIndex !== -1 &&
@@ -86,7 +91,7 @@ export class UsersInMemoryRepository implements UsersRepository {
         phoneIndex !== -1 &&
         this.userPhonesDatabase[phoneIndex].user_id !== id
       ) {
-        throw new Error('Phone already exists');
+        throw new HttpException('Phone already exists', HttpStatus.CONFLICT);
       }
       if (
         phoneIndex !== -1 &&
@@ -114,6 +119,13 @@ export class UsersInMemoryRepository implements UsersRepository {
     };
 
     return plainToInstance(User, userWithPhonesAndEmails);
+  }
+
+  updateEmail(emailId: string, email: string): User | Promise<User> {
+    return;
+  }
+  updatePhone(phoneId: string, phone: string): User | Promise<User> {
+    return;
   }
 
   delete(id: string): void | Promise<void> {
