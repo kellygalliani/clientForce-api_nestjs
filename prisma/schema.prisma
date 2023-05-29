@@ -14,55 +14,71 @@ model User {
   id        String        @id
   name      String
   password  String
-  createdAt String
+  createdAt DateTime
   isAdmin   Boolean
-  avatar    String
-  emails    UserEmail[]
-  phones    UserPhone[]
+  avatar    String?
+  isActive  Boolean
+  email     UserEmail[]
+  phone     UserPhone[]
   contacts  UserContact[]
+
+  @@map("users")
 }
 
 model UserEmail {
-  id     String @id
-  email  String @unique
-  userId String
-  user   User   @relation(fields: [userId], references: [id])
+  id        String  @id @default(uuid())
+  email     String  @unique
+  user_id   String
+  user      User    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  isPrimary Boolean
+
+  @@map("users_email")
 }
 
 model UserPhone {
-  id     String @id
-  phone  String
-  userId String
-  user   User   @relation(fields: [userId], references: [id])
+  id      String @id @default(uuid())
+  phone   String
+  user_id String
+  user    User   @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@map("users_phone")
 }
 
 model Contact {
   id          String         @id
   name        String
-  createdAt   String
+  createdAt   DateTime
   emails      ContactEmail[]
   phones      ContactPhone[]
   UserContact UserContact[]
+
+  @@map("contacts")
 }
 
 model ContactEmail {
-  id        String  @id
-  email     String  @unique
-  contactId String
-  contact   Contact @relation(fields: [contactId], references: [id])
+  id         String  @id @default(uuid())
+  email      String  @unique
+  contact_id String
+  contact    Contact @relation(fields: [contact_id], references: [id])
+
+  @@map("contacts_email")
 }
 
 model ContactPhone {
-  id        String  @id
-  phone     String
-  contactId String
-  contact   Contact @relation(fields: [contactId], references: [id])
+  id         String  @id @default(uuid())
+  phone      String
+  contact_id String
+  contact    Contact @relation(fields: [contact_id], references: [id])
+
+  @@map("contacts_phone")
 }
 
 model UserContact {
-  id        String  @id
-  userId    String
-  user      User    @relation(fields: [userId], references: [id])
-  contactId String
-  contact   Contact @relation(fields: [contactId], references: [id])
+  id         String  @id @default(uuid())
+  user_id    String
+  user       User    @relation(fields: [user_id], references: [id])
+  contact_id String
+  contact    Contact @relation(fields: [contact_id], references: [id])
+
+  @@map("users_contacts")
 }

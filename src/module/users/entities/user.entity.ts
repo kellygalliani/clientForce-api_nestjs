@@ -11,6 +11,7 @@ export class User {
   avatar: string;
   isAdmin: boolean;
   createdAt: Date;
+  isActive: boolean;
 
   constructor() {
     this.id = randomUUID();

@@ -8,13 +8,16 @@ import { UsersRepository } from '../users.repository';
 import { plainToInstance } from 'class-transformer';
 
 export class UsersInMemoryRepository implements UsersRepository {
+  findByEmail(email: string): Promise<{ userEmail: UserEmail; user: User }> {
+    throw new Error('Method not implemented.');
+  }
   private database: User[] = [];
   private userEmailsDatabase: UserEmail[] = [];
   private userPhonesDatabase: UserPhone[] = [];
 
   create(data: CreateUserDto): User {
     const newUser = new User();
-    const { name, password, isAdmin, avatar, phone, email } = data;
+    const { phone, email } = data;
 
     Object.assign(newUser, {
       ...data,

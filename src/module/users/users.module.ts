@@ -4,6 +4,7 @@ import { UsersController } from './users.controller';
 import { UsersRepository } from './repositories/users.repository';
 import { UsersInMemoryRepository } from './repositories/in-memory/users.in-memory.repository';
 import { PrismaService } from 'src/database/prisma.service';
+import { UsersPrismaRepository } from './repositories/prisma/users.prisma.repository';
 
 @Module({
   controllers: [UsersController],
@@ -12,8 +13,9 @@ import { PrismaService } from 'src/database/prisma.service';
     PrismaService,
     {
       provide: UsersRepository,
-      useClass: UsersInMemoryRepository,
+      useClass: UsersPrismaRepository,
     },
   ],
+  exports: [UsersService],
 })
 export class UsersModule {}
