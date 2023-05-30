@@ -3,9 +3,11 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UsersRepository } from './repositories/users.repository';
+import { UpdateUserEmailDto } from './dto/update-userEmail.dto';
 
 @Injectable()
 export class UsersService {
@@ -21,13 +23,13 @@ export class UsersService {
     return user;
   }
 
-  async findAll() {
-    const users = await this.usersRepository.findAll();
+  async findAll(userLoggedId: string) {
+    const users = await this.usersRepository.findAll(userLoggedId);
     return users;
   }
 
-  async findOne(id: string) {
-    const user = await this.usersRepository.findOne(id);
+  async findOne(id: string, userLoggedId: string) {
+    const user = await this.usersRepository.findOne(id, userLoggedId);
     if (!user) {
       throw new NotFoundException('User not found!');
     }
@@ -38,22 +40,39 @@ export class UsersService {
     const user = await this.usersRepository.findByEmail(email);
     return user;
   }
-
-  async update(id: string, updateUserDto: UpdateUserDto) {
-    const user = await this.usersRepository.update(id, updateUserDto);
+  async update(id: string, updateUserDto: UpdateUserDto, userLoggedId: string) {
+    const user = await this.usersRepository.update(
+      id,
+      updateUserDto,
+      userLoggedId,
+    );
     return user;
   }
 
-  updateEmail(emailId: string, email: string) {
-    // lógica para modificar ou criar um novo e-mail
+  async updateEmail(
+    emailId: string,
+    data: UpdateUserEmailDto,
+    userLoggedId: string,
+  ) {
+    const emailUpdated = await this.usersRepository.updateEmail(
+      emailId,
+      data,
+      userLoggedId,
+    );
+    return emailUpdated;
   }
 
-  updatePhone(phoneId: string, phone: string) {
-    // lógica para modificar ou criar um novo e-mail
+  async updatePhone(phoneId: string, phone: string, userLoggedId: string) {
+    const phoneUpdated = await this.usersRepository.updatePhone(
+      phoneId,
+      phone,
+      userLoggedId,
+    );
+    return phoneUpdated;
   }
 
-  async remove(id: string) {
-    await this.usersRepository.delete(id);
+  async remove(id: string, userLoggedId: string) {
+    await this.usersRepository.delete(id, userLoggedId);
     return;
   }
 }

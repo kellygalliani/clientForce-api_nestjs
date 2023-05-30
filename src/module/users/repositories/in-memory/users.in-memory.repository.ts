@@ -6,9 +6,13 @@ import { UserEmail } from '../../entities/user_email.entity';
 import { UserPhone } from '../../entities/user_phone.entity';
 import { UsersRepository } from '../users.repository';
 import { plainToInstance } from 'class-transformer';
+import { UpdateUserEmailDto } from '../../dto/update-userEmail.dto';
 
 export class UsersInMemoryRepository implements UsersRepository {
   findByEmail(email: string): Promise<{ userEmail: UserEmail; user: User }> {
+    throw new Error('Method not implemented.');
+  }
+  updateEmail(emailId: string, data: UpdateUserEmailDto): User | Promise<User> {
     throw new Error('Method not implemented.');
   }
   private database: User[] = [];
@@ -124,9 +128,6 @@ export class UsersInMemoryRepository implements UsersRepository {
     return plainToInstance(User, userWithPhonesAndEmails);
   }
 
-  updateEmail(emailId: string, email: string): User | Promise<User> {
-    return;
-  }
   updatePhone(phoneId: string, phone: string): User | Promise<User> {
     return;
   }

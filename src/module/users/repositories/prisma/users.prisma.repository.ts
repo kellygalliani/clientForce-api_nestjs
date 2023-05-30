@@ -1,9 +1,12 @@
 import {
   ConflictException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
+  Inject,
 } from '@nestjs/common';
 import { UsersRepository } from '../users.repository';
+import { Request } from 'express';
 import { CreateUserDto } from '../../dto/create-user.dto';
 import { UpdateUserDto } from '../../dto/update-user.dto';
 import { User } from '../../entities/user.entity';
@@ -11,11 +14,11 @@ import { PrismaService } from 'src/database/prisma.service';
 import { plainToInstance } from 'class-transformer';
 import { UserPhone } from '../../entities/user_phone.entity';
 import { UserEmail } from '../../entities/user_email.entity';
+import { UpdateUserEmailDto } from '../../dto/update-userEmail.dto';
 
 @Injectable()
 export class UsersPrismaRepository implements UsersRepository {
   constructor(private prisma: PrismaService) {}
-
   async create(data: CreateUserDto): Promise<User> {
     const { phone, email, ...rest } = data;
     const user = new User();
@@ -41,6 +44,7 @@ export class UsersPrismaRepository implements UsersRepository {
           select: {
             email: true,
             id: true,
+            isPrimary: true,
           },
         },
         phone: {
@@ -56,13 +60,38 @@ export class UsersPrismaRepository implements UsersRepository {
       ...newUser,
     });
   }
-  async findAll(): Promise<User[]> {
+  async findAll(userLoggedId: string): Promise<User[] | User> {
+    const currentUser = await this.prisma.user.findUnique({
+      where: { id: userLoggedId },
+    });
+    if (!currentUser.isAdmin) {
+      const user = await this.prisma.user.findUnique({
+        where: { id: userLoggedId },
+        include: {
+          email: {
+            select: {
+              email: true,
+              id: true,
+              isPrimary: true,
+            },
+          },
+          phone: {
+            select: {
+              phone: true,
+              id: true,
+            },
+          },
+        },
+      });
+      return user;
+    }
     const users = await this.prisma.user.findMany({
       include: {
         email: {
           select: {
             email: true,
             id: true,
+            isPrimary: true,
           },
         },
         phone: {
@@ -77,7 +106,11 @@ export class UsersPrismaRepository implements UsersRepository {
     return users.map((user) => plainToInstance(User, user));
   }
 
-  async findOne(id: string): Promise<User> {
+  async findOne(id: string, userLoggedId: string): Promise<User> {
+    const currentUser = await this.prisma.user.findUnique({
+      where: { id: userLoggedId },
+    });
+
     const user = await this.prisma.user.findUnique({
       where: { id },
       include: {
@@ -103,6 +136,12 @@ export class UsersPrismaRepository implements UsersRepository {
         }, */
       },
     });
+    if (id !== currentUser.id && !currentUser.isAdmin) {
+      throw new ForbiddenException('Permission denied');
+    }
+    if (!user) {
+      throw new NotFoundException('User not found!');
+    }
 
     return plainToInstance(User, user);
   }
@@ -129,11 +168,21 @@ export class UsersPrismaRepository implements UsersRepository {
     };
   }
 
-  async update(id: string, data: UpdateUserDto): Promise<User> {
+  async update(
+    id: string,
+    data: UpdateUserDto,
+    userLoggedId: string,
+  ): Promise<User> {
     const { phone, email, ...rest } = data;
     const findUser = await this.prisma.user.findUnique({
       where: { id },
     });
+    const currentUser = await this.prisma.user.findUnique({
+      where: { id: userLoggedId },
+    });
+    if (id !== currentUser.id && !currentUser.isAdmin) {
+      throw new ForbiddenException('Permission denied');
+    }
     if (!findUser) {
       throw new NotFoundException('User not found!');
     }
@@ -198,15 +247,112 @@ export class UsersPrismaRepository implements UsersRepository {
     });
     return plainToInstance(User, user);
   }
-  async updateEmail(emailId: string, email: string): Promise<User> {
-    throw new Error('Method not implemented.');
+  async updateEmail(
+    emailId: string,
+    data: UpdateUserEmailDto,
+    userLoggedId: string,
+  ): Promise<User> {
+    const { isPrimary, email } = data;
+    const userEmail = await this.prisma.userEmail.findUnique({
+      where: { id: emailId },
+    });
+    if (!userEmail) {
+      throw new NotFoundException('Email not found!');
+    }
+    const currentUser = await this.prisma.user.findUnique({
+      where: { id: userLoggedId },
+    });
+    if (userEmail.user_id !== currentUser.id && !currentUser.isAdmin) {
+      throw new ForbiddenException('Permission denied');
+    }
+    if (email) {
+      const existingEmail = await this.prisma.userEmail.findFirst({
+        where: { email },
+      });
+      if (existingEmail) {
+        if (existingEmail.user_id === userEmail.user_id) {
+          if (existingEmail.id !== userEmail.id) {
+            throw new ConflictException('Email already exists for this user');
+          }
+        } else {
+          throw new ConflictException('Email already exists');
+        }
+      }
+    }
+    if (isPrimary) {
+      await this.prisma.userEmail.updateMany({
+        where: { user_id: userEmail.user_id, isPrimary: true },
+        data: { isPrimary: false },
+      });
+    }
+    await this.prisma.userEmail.update({
+      where: { id: emailId },
+      data: { email, isPrimary },
+    });
+    return this.prisma.user.findUnique({
+      where: { id: userEmail.user_id },
+      include: {
+        email: {
+          select: {
+            email: true,
+            id: true,
+            isPrimary: true,
+          },
+        },
+      },
+    });
   }
-  async updatePhone(phoneId: string, phone: string): Promise<User> {
-    throw new Error('Method not implemented.');
+
+  async updatePhone(
+    phoneId: string,
+    phone: string,
+    userLoggedId: string,
+  ): Promise<User> {
+    const userPhone = await this.prisma.userPhone.findUnique({
+      where: { id: phoneId },
+    });
+    if (!userPhone) {
+      throw new NotFoundException('Phone not found!');
+    }
+    const currentUser = await this.prisma.user.findUnique({
+      where: { id: userLoggedId },
+    });
+    if (userPhone.user_id !== currentUser.id && !currentUser.isAdmin) {
+      throw new ForbiddenException('Permission denied');
+    }
+
+    await this.prisma.userPhone.update({
+      where: { id: phoneId },
+      data: { phone },
+    });
+    return this.prisma.user.findUnique({
+      where: { id: userPhone.user_id },
+      include: {
+        phone: {
+          select: {
+            phone: true,
+            id: true,
+          },
+        },
+      },
+    });
   }
-  async delete(id: string): Promise<void> {
-    await this.prisma.user.delete({
+
+  async delete(id: string, userLoggedId: string): Promise<void> {
+    const currentUser = await this.prisma.user.findUnique({
+      where: { id: userLoggedId },
+    });
+    if (id !== currentUser.id && !currentUser.isAdmin) {
+      throw new ForbiddenException('Permission denied');
+    }
+
+    const userToDelete = await this.prisma.user.findUnique({ where: { id } });
+    if (!userToDelete) {
+      throw new NotFoundException('User not found!');
+    }
+    await this.prisma.user.update({
       where: { id },
+      data: { isActive: false },
     });
   }
 }

@@ -8,11 +8,14 @@ import {
   Delete,
   HttpCode,
   UseGuards,
+  Request,
+  Req,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { UpdateUserEmailDto } from './dto/update-userEmail.dto';
 
 @Controller('users')
 export class UsersController {
@@ -25,37 +28,49 @@ export class UsersController {
 
   @Get('')
   @UseGuards(JwtAuthGuard)
-  findAll() {
-    return this.usersService.findAll();
+  findAll(@Request() Req) {
+    return this.usersService.findAll(Req.user.id);
   }
 
   @Get(':id')
   @UseGuards(JwtAuthGuard)
-  findOne(@Param('id') id: string) {
-    return this.usersService.findOne(id);
+  findOne(@Param('id') id: string, @Request() Req) {
+    return this.usersService.findOne(id, Req.user.id);
   }
 
   @Patch(':id')
   @UseGuards(JwtAuthGuard)
-  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.usersService.update(id, updateUserDto);
+  update(
+    @Param('id') id: string,
+    @Body() updateUserDto: UpdateUserDto,
+    @Request() Req,
+  ) {
+    return this.usersService.update(id, updateUserDto, Req.user.id);
   }
-  @Patch(':email/:emailId')
+  @Patch('email/:emailId')
   @UseGuards(JwtAuthGuard)
-  updateEmail(@Param('emailId') emailId: string, @Body('email') email: string) {
-    return this.usersService.updateEmail(emailId, email);
+  updateEmail(
+    @Param('emailId') emailId: string,
+    @Body() data: UpdateUserEmailDto,
+    @Request() Req,
+  ) {
+    return this.usersService.updateEmail(emailId, data, Req.user.id);
   }
 
-  @Patch(':phone/:phoneId')
+  @Patch('phone/:phoneId')
   @UseGuards(JwtAuthGuard)
-  updatePhone(@Param('phoneId') phoneId: string, @Body('phone') phone: string) {
-    return this.usersService.updatePhone(phoneId, phone);
+  updatePhone(
+    @Param('phoneId') phoneId: string,
+    @Body('phone') phone: string,
+    @Request() Req,
+  ) {
+    return this.usersService.updatePhone(phoneId, phone, Req.user.id);
   }
 
   @HttpCode(204)
   @Delete(':id')
   @UseGuards(JwtAuthGuard)
-  remove(@Param('id') id: string) {
-    return this.usersService.remove(id);
+  remove(@Param('id') id: string, @Request() Req) {
+    return this.usersService.remove(id, Req.user.id);
   }
 }
