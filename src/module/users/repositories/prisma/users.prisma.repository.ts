@@ -19,6 +19,7 @@ import { UpdateUserEmailDto } from '../../dto/update-userEmail.dto';
 @Injectable()
 export class UsersPrismaRepository implements UsersRepository {
   constructor(private prisma: PrismaService) {}
+
   async create(data: CreateUserDto): Promise<User> {
     const { phone, email, ...rest } = data;
     const user = new User();
@@ -83,7 +84,7 @@ export class UsersPrismaRepository implements UsersRepository {
           },
         },
       });
-      return user;
+      return plainToInstance(User, user);
     }
     const users = await this.prisma.user.findMany({
       include: {
@@ -303,6 +304,27 @@ export class UsersPrismaRepository implements UsersRepository {
     });
   }
 
+  async deleteEmail(emailId: string, userLoggedId: string): Promise<void> {
+    const userEmail = await this.prisma.userEmail.findUnique({
+      where: { id: emailId },
+    });
+    if (!userEmail) {
+      throw new NotFoundException('Email not found!');
+    }
+    const currentUser = await this.prisma.user.findUnique({
+      where: { id: userLoggedId },
+    });
+    if (userEmail.user_id !== currentUser.id && !currentUser.isAdmin) {
+      throw new ForbiddenException('Permission denied');
+    }
+    if (userEmail.isPrimary) {
+      throw new ForbiddenException('Unable to delete login email');
+    }
+    await this.prisma.userEmail.delete({
+      where: { id: emailId },
+    });
+  }
+
   async updatePhone(
     phoneId: string,
     phone: string,
@@ -335,6 +357,24 @@ export class UsersPrismaRepository implements UsersRepository {
           },
         },
       },
+    });
+  }
+
+  async deletePhone(phoneId: string, userLoggedId: string): Promise<void> {
+    const userPhone = await this.prisma.userPhone.findUnique({
+      where: { id: phoneId },
+    });
+    if (!userPhone) {
+      throw new NotFoundException('Phone not found!');
+    }
+    const currentUser = await this.prisma.user.findUnique({
+      where: { id: userLoggedId },
+    });
+    if (userPhone.user_id !== currentUser.id && !currentUser.isAdmin) {
+      throw new ForbiddenException('Permission denied');
+    }
+    await this.prisma.userPhone.delete({
+      where: { id: phoneId },
     });
   }
 

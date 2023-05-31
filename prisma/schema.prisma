@@ -57,9 +57,9 @@ model Contact {
 
 model ContactEmail {
   id         String  @id @default(uuid())
-  email      String  @unique
+  email      String
   contact_id String
-  contact    Contact @relation(fields: [contact_id], references: [id])
+  contact    Contact @relation(fields: [contact_id], references: [id], onDelete: Cascade)
 
   @@map("contacts_email")
 }
@@ -68,7 +68,7 @@ model ContactPhone {
   id         String  @id @default(uuid())
   phone      String
   contact_id String
-  contact    Contact @relation(fields: [contact_id], references: [id])
+  contact    Contact @relation(fields: [contact_id], references: [id], onDelete: Cascade)
 
   @@map("contacts_phone")
 }
@@ -76,9 +76,9 @@ model ContactPhone {
 model UserContact {
   id         String  @id @default(uuid())
   user_id    String
-  user       User    @relation(fields: [user_id], references: [id])
+  user       User    @relation(fields: [user_id], references: [id], onDelete: Cascade)
   contact_id String
-  contact    Contact @relation(fields: [contact_id], references: [id])
+  contact    Contact @relation(fields: [contact_id], references: [id], onDelete: Cascade)
 
   @@map("users_contacts")
 }

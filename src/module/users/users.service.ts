@@ -61,6 +61,13 @@ export class UsersService {
     );
     return emailUpdated;
   }
+  async deleteEmail(emailId: string, userLoggedId: string) {
+    const emailDeleted = await this.usersRepository.deleteEmail(
+      emailId,
+      userLoggedId,
+    );
+    return emailDeleted;
+  }
 
   async updatePhone(phoneId: string, phone: string, userLoggedId: string) {
     const phoneUpdated = await this.usersRepository.updatePhone(
@@ -69,6 +76,13 @@ export class UsersService {
       userLoggedId,
     );
     return phoneUpdated;
+  }
+  async deletePhone(PhoneId: string, userLoggedId: string) {
+    const deletedPhone = await this.usersRepository.deletePhone(
+      PhoneId,
+      userLoggedId,
+    );
+    return deletedPhone;
   }
 
   async remove(id: string, userLoggedId: string) {

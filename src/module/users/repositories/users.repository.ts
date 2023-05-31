@@ -21,10 +21,18 @@ export abstract class UsersRepository {
     data: UpdateUserEmailDto,
     userLoggedId: string,
   ): Promise<User> | User;
+  abstract deleteEmail(
+    emailId: string,
+    userLoggedId: string,
+  ): Promise<void> | void;
   abstract updatePhone(
     phoneId: string,
     phone: string,
     userLoggedId: string,
   ): Promise<User> | User;
+  abstract deletePhone(
+    phoneId: string,
+    userLoggedId: string,
+  ): Promise<void> | void;
   abstract delete(id: string, userLoggedId: string): Promise<void> | void;
 }

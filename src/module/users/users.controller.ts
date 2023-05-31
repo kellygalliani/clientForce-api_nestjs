@@ -9,7 +9,6 @@ import {
   HttpCode,
   UseGuards,
   Request,
-  Req,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -56,6 +55,11 @@ export class UsersController {
   ) {
     return this.usersService.updateEmail(emailId, data, Req.user.id);
   }
+  @Delete('email/:emailId')
+  @UseGuards(JwtAuthGuard)
+  deleteEmail(@Param('emailId') emailId: string, @Request() Req) {
+    return this.usersService.deleteEmail(emailId, Req.user.id);
+  }
 
   @Patch('phone/:phoneId')
   @UseGuards(JwtAuthGuard)
@@ -65,6 +69,12 @@ export class UsersController {
     @Request() Req,
   ) {
     return this.usersService.updatePhone(phoneId, phone, Req.user.id);
+  }
+
+  @Delete('phone/:phoneId')
+  @UseGuards(JwtAuthGuard)
+  deletePhone(@Param('phoneId') phoneId: string, @Request() Req) {
+    return this.usersService.deletePhone(phoneId, Req.user.id);
   }
 
   @HttpCode(204)

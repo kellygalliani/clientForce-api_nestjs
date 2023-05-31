@@ -9,6 +9,12 @@ import { plainToInstance } from 'class-transformer';
 import { UpdateUserEmailDto } from '../../dto/update-userEmail.dto';
 
 export class UsersInMemoryRepository implements UsersRepository {
+  deleteEmail(emailId: string, userLoggedId: string): void | Promise<void> {
+    throw new Error('Method not implemented.');
+  }
+  deletePhone(phoneId: string, userLoggedId: string): void | Promise<void> {
+    throw new Error('Method not implemented.');
+  }
   findByEmail(email: string): Promise<{ userEmail: UserEmail; user: User }> {
     throw new Error('Method not implemented.');
   }
