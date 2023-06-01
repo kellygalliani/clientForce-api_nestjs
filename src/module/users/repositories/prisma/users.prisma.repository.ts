@@ -61,6 +61,7 @@ export class UsersPrismaRepository implements UsersRepository {
       ...newUser,
     });
   }
+
   async findAll(userLoggedId: string): Promise<User[] | User> {
     const currentUser = await this.prisma.user.findUnique({
       where: { id: userLoggedId },
@@ -128,24 +129,29 @@ export class UsersPrismaRepository implements UsersRepository {
             id: true,
           },
         },
-        /* contacts: {
-          select: {
-            name: true,
-            id: true,
-            createdAt: true,
-          },
-        }, */
       },
     });
+
     if (id !== currentUser.id && !currentUser.isAdmin) {
       throw new ForbiddenException('Permission denied');
     }
     if (!user) {
       throw new NotFoundException('User not found!');
     }
+    const userContacts = await this.prisma.userContact.findMany({
+      where: { user_id: id },
+      include: {
+        contact: true,
+      },
+    });
 
-    return plainToInstance(User, user);
+    const result = {
+      ...user,
+      contacts: userContacts,
+    };
+    return plainToInstance(User, result);
   }
+
   async findByEmail(
     email: string,
   ): Promise<{ userEmail: UserEmail; user: User }> {
@@ -248,6 +254,7 @@ export class UsersPrismaRepository implements UsersRepository {
     });
     return plainToInstance(User, user);
   }
+
   async updateEmail(
     emailId: string,
     data: UpdateUserEmailDto,
