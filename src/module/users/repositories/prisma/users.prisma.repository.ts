@@ -85,7 +85,18 @@ export class UsersPrismaRepository implements UsersRepository {
           },
         },
       });
-      return plainToInstance(User, user);
+      const userContacts = await this.prisma.userContact.findMany({
+        where: { user_id: userLoggedId },
+        include: {
+          contact: true,
+        },
+      });
+
+      const result = {
+        ...user,
+        contacts: userContacts.forEach((contact) => contact.contact),
+      };
+      return plainToInstance(User, result);
     }
     const users = await this.prisma.user.findMany({
       include: {
@@ -105,7 +116,23 @@ export class UsersPrismaRepository implements UsersRepository {
       },
     });
 
-    return users.map((user) => plainToInstance(User, user));
+    const usersWithContacts = await Promise.all(
+      users.map(async (user) => {
+        const userContacts = await this.prisma.userContact.findMany({
+          where: { user_id: user.id },
+          include: {
+            contact: true,
+          },
+        });
+
+        return {
+          ...user,
+          contacts: userContacts.forEach((contact) => contact.contact),
+        };
+      }),
+    );
+
+    return usersWithContacts.map((user) => plainToInstance(User, user));
   }
 
   async findOne(id: string, userLoggedId: string): Promise<User> {
@@ -252,7 +279,19 @@ export class UsersPrismaRepository implements UsersRepository {
         },
       },
     });
-    return plainToInstance(User, user);
+
+    const userContacts = await this.prisma.userContact.findMany({
+      where: { user_id: id },
+      include: {
+        contact: true,
+      },
+    });
+
+    const result = {
+      ...user,
+      contacts: userContacts,
+    };
+    return plainToInstance(User, result);
   }
 
   async updateEmail(
@@ -297,7 +336,8 @@ export class UsersPrismaRepository implements UsersRepository {
       where: { id: emailId },
       data: { email, isPrimary },
     });
-    return this.prisma.user.findUnique({
+
+    const user = await this.prisma.user.findUnique({
       where: { id: userEmail.user_id },
       include: {
         email: {
@@ -309,6 +349,19 @@ export class UsersPrismaRepository implements UsersRepository {
         },
       },
     });
+
+    const userContacts = await this.prisma.userContact.findMany({
+      where: { user_id: user.id },
+      include: {
+        contact: true,
+      },
+    });
+
+    const result = {
+      ...user,
+      contacts: userContacts,
+    };
+    return plainToInstance(User, result);
   }
 
   async deleteEmail(emailId: string, userLoggedId: string): Promise<void> {
@@ -354,7 +407,7 @@ export class UsersPrismaRepository implements UsersRepository {
       where: { id: phoneId },
       data: { phone },
     });
-    return this.prisma.user.findUnique({
+    const user = this.prisma.user.findUnique({
       where: { id: userPhone.user_id },
       include: {
         phone: {
@@ -365,6 +418,7 @@ export class UsersPrismaRepository implements UsersRepository {
         },
       },
     });
+    return plainToInstance(User, user);
   }
 
   async deletePhone(phoneId: string, userLoggedId: string): Promise<void> {
