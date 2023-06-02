@@ -91,10 +91,9 @@ export class UsersPrismaRepository implements UsersRepository {
           contact: true,
         },
       });
-
       const result = {
         ...user,
-        contacts: userContacts.forEach((contact) => contact.contact),
+        contacts: [userContacts.forEach((contact) => contact.contact)],
       };
       return plainToInstance(User, result);
     }
@@ -127,7 +126,7 @@ export class UsersPrismaRepository implements UsersRepository {
 
         return {
           ...user,
-          contacts: userContacts.forEach((contact) => contact.contact),
+          contacts: userContacts,
         };
       }),
     );
