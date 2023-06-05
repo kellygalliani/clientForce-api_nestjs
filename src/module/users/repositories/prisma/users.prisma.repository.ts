@@ -373,7 +373,8 @@ export class UsersPrismaRepository implements UsersRepository {
     const currentUser = await this.prisma.user.findUnique({
       where: { id: userLoggedId },
     });
-    if (userEmail.user_id !== currentUser.id && !currentUser.isAdmin) {
+
+    if (userEmail.user_id !== userLoggedId && !currentUser.isAdmin) {
       throw new ForbiddenException('Permission denied');
     }
     if (userEmail.isPrimary) {
